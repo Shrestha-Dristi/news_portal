@@ -4,6 +4,7 @@ from news.api.serializers import TagSerializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 def news(request):
@@ -67,3 +68,23 @@ def tag_delete(request,id):
     return Response({
         "message":"deleted"
     })
+
+class TagApiView(APIView):
+
+    def get(self, request):
+        data = Tags.objects.filter(is_active=True)
+        serializer = TagSerializers(data, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+    
+    def post(self, request):
+        # data = request.data
+        # data['created_by']=request.user.id
+        # data['modified_by']=request.user.id
+
+        serializer = TagSerializers(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message":"Successfully saved"
+            }, status.HTTP_201_CREATED)
+        return Response(serializer.errors,status.HTTP_400_BAD_REQUEST)    
