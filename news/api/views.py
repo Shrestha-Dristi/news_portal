@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.shortcuts import get_object_or_404
 
 def news(request):
     return JsonResponse({
@@ -70,6 +71,7 @@ def tag_delete(request,id):
     })
 
 class TagApiView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         data = Tags.objects.filter(is_active=True)
@@ -77,17 +79,50 @@ class TagApiView(APIView):
         return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
-        # data = request.data
-        # data['created_by']=request.user.id
-        # data['modified_by']=request.user.id
+        data = request.data
+        data['created_by']=request.user.id
+        data['modified_by']=request.user.id
 
-        serializer = TagSerializers(data=request.data)
+        serializer = TagSerializers(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({
                 "message":"Successfully saved"
             }, status.HTTP_201_CREATED)
         return Response(serializer.errors,status.HTTP_400_BAD_REQUEST) 
+    
+class UpdateAndDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def put(self, request, pk):
+        tag = get_object_or_404(Tags, id=pk)
+        if tag.created_by.id != request.user.id:
+            return Response({
+                "message": "Invalid User",
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        data = request.data
+        data['modified_by'] = request.user.id
+        serializer = TagSerializers(data=data, instance=tag)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message" : "Successfully updated",
+                "data" : serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        tag = get_object_or_404(Tags, id=pk)
+        if tag.created_by.id != request.user.id:
+            return Response({
+                "message": "Invalid User",
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        tag.delete()
+        return Response({
+            "message" : "Tag Successfully deleted"
+        },status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
 def news_today(request):

@@ -1,9 +1,13 @@
 from rest_framework import serializers
 from news.models import Tags, News
+from user.api.serializers import UserInfoSerializer
 from author.api.serializers import AuthorSerializers
 
 class TagSerializers(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
+    created_by = UserInfoSerializer() 
+    test = serializers.CharField(required=False,allow_null=True, allow_blank=False)
+
     class Meta:
         model = Tags
         fields = '__all__'
