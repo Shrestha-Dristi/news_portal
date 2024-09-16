@@ -1,6 +1,6 @@
 from django.http import JsonResponse
-from news.models import Tags
-from news.api.serializers import TagSerializers
+from news.models import Tags,News
+from news.api.serializers import TagSerializers, NewsSerializers    
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
@@ -87,4 +87,11 @@ class TagApiView(APIView):
             return Response({
                 "message":"Successfully saved"
             }, status.HTTP_201_CREATED)
-        return Response(serializer.errors,status.HTTP_400_BAD_REQUEST)    
+        return Response(serializer.errors,status.HTTP_400_BAD_REQUEST) 
+
+@api_view(['GET'])
+def news_today(request):
+    data = News.objects.filter(is_active=True)
+    serializer = NewsSerializers(data, many=True)
+    print(serializer)
+    return Response(serializer.data, status.HTTP_200_OK)

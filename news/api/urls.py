@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import news, tags, tag_post, tag_stats, tag_detail, tag_update, tag_delete, TagApiView
+from .views import news, tags, tag_post, tag_stats, tag_detail, tag_update, tag_delete, TagApiView, news_today
 
 urlpatterns = [
     path('', news, name="name"),
@@ -10,4 +10,5 @@ urlpatterns = [
     path('tag-update', tag_update, name="tag-update"),
     path('tag-delete', tag_delete, name="tag-delete"),
     path('class-tag', TagApiView.as_view(), name="tag-view"),
+    path('today', news_today, name="news-today"),
 ]
