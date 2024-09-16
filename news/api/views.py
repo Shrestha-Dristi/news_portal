@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
+from rest_framework import generics 
 
 def news(request):
     return JsonResponse({
@@ -125,8 +126,22 @@ class UpdateAndDeleteView(APIView):
         },status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def news_today(request):
     data = News.objects.filter(is_active=True)
     serializer = NewsSerializers(data, many=True)
     print(serializer)
     return Response(serializer.data, status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def news_today_create(request):
+    serializer = NewsSerializers(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            "message" : "News Successfully Created",
+            "data" : serializer.data
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, 422)
+
